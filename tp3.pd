@@ -1,0 +1,182 @@
+const N : nat ^= 2;
+const NB_P : nat ^= 3;
+const NB_S : nat ^= 4;
+
+class Message ^= tag;
+
+class Etat ^=
+	enum
+		CREE,
+		PUBLIE,
+		SUB,
+		CONSOMME
+	end;
+
+class Type ^=
+	enum
+		I,
+		T
+	end;
+  
+class Publisher ^=
+	abstract
+		var
+			type : Type,
+			messages : set of Message,
+			etats : map of (Message -> Etat),
+			ids : map of (Message -> string);
+		invariant
+			etats.dom = messages,
+			etats.ran <<= set of (Etat){CREE@Etat, PUBLIE@Etat},
+			ids.dom = messages,
+			forall x1,x2::(ids.dom) :- ids[x1] = ids[x2] ==> x1 = x2;
+	interface
+		build {t : Type}
+			post
+				type! = t,
+				messages! = set of Message{},
+				etats! = map of (Message -> Etat){},
+				ids! = map of (Message -> string){};
+
+		function type;
+		
+		function aPublieMessage(m : Message) : bool ^=
+			m in messages & etats[m] = PUBLIE@Etat;
+
+		schema !creerMessages(m : Message, id : string)
+			pre
+				?
+			post
+				?;
+		
+		schema !publierMessage(m : Message)
+			pre
+				?
+			post
+				?;
+		
+		schema !effacerMessage(m : Message)
+			pre
+				?
+			post
+				?;
+		
+		schema !fermerPublisher
+			post
+				?;
+	end;
+  
+class Subscriber ^=
+	abstract
+		var
+			type : Type,
+			messages : set of Message,
+			etats : map of (Message -> Etat),
+			ids : map of (Message -> string);
+		invariant
+			etats.dom = messages,
+			etats.ran <<= set of (Etat){SUB@Etat, CONSOMME@Etat},
+			ids.dom = messages,
+			forall x1,x2::(ids.dom) :- ids[x1] = ids[x2] ==> x1 = x2;
+	interface
+		build {t : Type}
+			post
+				type! = t,
+				messages! = set of Message{},
+				etats! = map of (Message -> Etat){},
+				ids! = map of (Message -> string){};
+
+		function type;
+		
+		function aConsommeMessage(m : Message) : bool ^=
+			m in messages & etats[m] = CONSOMME@Etat;
+
+		schema !consommerMessage(m : Message)
+			pre
+				?
+			post
+				?;
+		
+		schema !subMessages(ms : set of Message, idss : map of (Message -> string))
+			pre
+				?
+			post
+				?;
+		
+		schema !effacerMessages(ms : set of Message)
+			pre
+				?
+			post
+				?;
+		
+		schema !fermerSubscriber
+			post
+				?;
+	end;
+
+class Broker ^=
+	abstract
+		var
+			messages : seq of pair of (Type, Message),
+			etats : map of (Message -> Etat),
+			publishers : set of Publisher,
+			subscribers : set of Subscriber,
+			delaiDeRetention : nat,
+			maintenant : nat,
+			tempsArrives : map of (Message -> nat);
+			
+		invariant
+			forall m1,m2::messages :- m1 ~= m2 ==> m1.y ~= m2.y,
+			(for m::messages.ran yield m.y) = etats.dom,
+			etats.ran <<= set of Etat{PUBLIE@Etat, SUB@Etat},
+			#etats <= N,
+			forall t:Type :- #(those p::publishers :- p.type = t) <= NB_P,
+			forall t:Type :- #(those s::subscribers :- s.type = t) <= NB_S,
+			etats.dom = tempsArrives.dom,
+			delaiDeRetention > 0;
+			
+	interface
+		build {delai, n : nat}
+			pre
+				delai > 0
+			post
+				messages! = seq of pair of (Type, Message){},
+				etats! = map of (Message -> Etat){},
+				publishers! = set of Publisher{},
+				subscribers! = set of Subscriber{},
+				delaiDeRetention! = delai,
+				maintenant! = n,
+				tempsArrives! = map of (Message -> nat){};
+
+		schema !tick
+			post
+				?;
+		
+		schema !ajouterPublisher(pub : Publisher)
+			pre
+				?
+			post
+				?;
+		
+		schema !ajouterSubscriber(sub : Subscriber)
+			pre
+				?
+			post
+				?;
+		
+		schema !recevoirMessage(m : Message, t : Type)
+			pre
+				?
+			post
+				?;
+
+		schema !envoyerMessage(m : Message)
+			pre
+				?
+			post
+				?;
+
+		schema !supprimerMessagesTempsExpire
+			post
+				?;
+end;
