@@ -45,15 +45,21 @@ class Publisher ^=
 
 		schema !creerMessages(m : Message, id : string)
 			pre
-				?
+				m ~in messages,
+				id ~in ids.ran
 			post
-				?;
+				messages! = messages.append(m),
+				etats! = etats.append(pair of (Message, Etat){m, CREE@Etat}),
+				ids! = ids.append(pair of (Message, string){m, id});
+
 		
 		schema !publierMessage(m : Message)
 			pre
-				?
+				m in messages,
+				etats[m] = CREE@Etat
 			post
-				?;
+				//TODO: Call effacer message pour ne plus avoir l'erreur
+				etats! = etats.append(pair of (Message, Etat) {m, PUBLIE@Etat});
 		
 		schema !effacerMessage(m : Message)
 			pre
