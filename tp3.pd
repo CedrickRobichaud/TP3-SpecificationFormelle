@@ -175,13 +175,13 @@ class Broker ^=
 		
 		schema !ajouterSubscriber(sub : Subscriber)
 			pre
-			(sub in subscribers),
+			~(sub in subscribers),
 		    // sub ~in subscribers,
 			#(those s::subscribers :- s.type = sub.type) < NB_S
 			post
 			subscribers! =subscribers.append(sub),//; with ou add append copié de l exemple de la bibliotheque  ?
 			messages! = messages,
-			etats! = etats,
+			etats! = etats,// à verifié cette ligne 
 			publishers! = publishers,
 			delaiDeRetention! = delaiDeRetention,
 			maintenant! = maintenant,
@@ -201,5 +201,5 @@ class Broker ^=
 
 		schema !supprimerMessagesTempsExpire
 			post
-				?;
+		       ?;
 end;
