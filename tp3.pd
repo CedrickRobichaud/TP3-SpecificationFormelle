@@ -105,9 +105,16 @@ class Subscriber ^=
 		
 		schema !subMessages(ms : set of Message, idss : map of (Message -> string))
 			pre
-				?
+        (ms ** messages).empty,
+		idss.dom = ms,
+        forall m::(ms) :- ~(idss[m] in ids.ran),
+        idss.dom = ms,
+        forall m1,m2::(ms) :- idss[m1] = idss[m2] ==> m1 = m2
 			post
-				?;
+        messages! = messages ++ ms,
+		etats! =etats ++ map of (Message -> Etat){for m :: ms yield pair of (Message, Etat){m, SUB@Etat}},
+        ids! = ids ++ idss;
+				
 		
 		schema !effacerMessages(ms : set of Message)
 			pre
