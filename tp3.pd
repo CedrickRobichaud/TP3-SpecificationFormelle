@@ -124,7 +124,9 @@ class Subscriber ^=
 		
 		schema !fermerSubscriber
 			post
-				?;
+				messages! = set of Message{},
+		        etats! = map of (Message -> Etat){},
+		        ids! = map of (Message -> string){};
 	end;
 
 class Broker ^=
@@ -163,7 +165,7 @@ class Broker ^=
 
 		schema !tick
 			post
-				?;
+				maintenant! = maintenant+1;
 		
 		schema !ajouterPublisher(pub : Publisher)
 			pre
@@ -173,9 +175,17 @@ class Broker ^=
 		
 		schema !ajouterSubscriber(sub : Subscriber)
 			pre
-				?
+			(sub in subscribers),
+		    // sub ~in subscribers,
+			#(those s::subscribers :- s.type = sub.type) < NB_S
 			post
-				?;
+			subscribers! =subscribers.append(sub),//; with ou add append copié de l exemple de la bibliotheque  ?
+			messages! = messages,
+			etats! = etats,
+			publishers! = publishers,
+			delaiDeRetention! = delaiDeRetention,
+			maintenant! = maintenant,
+			tempsArrives! = tempsArrives;
 		
 		schema !recevoirMessage(m : Message, t : Type)
 			pre
