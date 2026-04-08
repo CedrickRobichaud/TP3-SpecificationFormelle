@@ -118,9 +118,11 @@ class Subscriber ^=
 		
 		schema !effacerMessages(ms : set of Message)
 			pre
-				?
+				ms <<= messages,
+				forall m :: ms :- etats[m] = CONSOMME@Etat
 			post
-				?;
+				messages! = messages -- ms;
+				ids! 
 		
 		schema !fermerSubscriber
 			post
@@ -179,9 +181,9 @@ class Broker ^=
 		    // sub ~in subscribers,
 			#(those s::subscribers :- s.type = sub.type) < NB_S
 			post
-			subscribers! =subscribers.append(sub),//; with ou add append copié de l exemple de la bibliotheque  ?
+			subscribers! =subscribers.append(sub),//; with ou add append copiï¿½ de l exemple de la bibliotheque  ?
 			messages! = messages,
-			etats! = etats,// à verifié cette ligne 
+			etats! = etats,// ï¿½ verifiï¿½ cette ligne 
 			publishers! = publishers,
 			delaiDeRetention! = delaiDeRetention,
 			maintenant! = maintenant,
