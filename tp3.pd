@@ -180,9 +180,16 @@ class Broker ^=
 		
 		schema !ajouterPublisher(pub : Publisher)
 			pre
-				?
+				~(pub in publishers),
+				#(those p::publishers :- p.type = pub.type) < NB_P
 			post
-				?;
+				publishers! = publishers.append(pub),
+				messages! = messages,
+				etats! = etats,
+				subscribers! = subscribers,
+				delaiDeRetention! = delaiDeRetention,
+				maintenant! = maintenant,
+				tempsArrives! = tempsArrives;
 		
 		schema !ajouterSubscriber(sub : Subscriber)
 			pre
