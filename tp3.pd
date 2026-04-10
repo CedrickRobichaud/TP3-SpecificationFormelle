@@ -63,13 +63,20 @@ class Publisher ^=
 		
 		schema !effacerMessage(m : Message)
 			pre
-				?
+				m in messages,
+				etats[m] = PUBLIE@Etat
 			post
-				?;
+				messages! = messages.remove(m),
+				etats! = etats -- set of (Message){m},
+				ids! = ids -- set of (Message){m},
+				type! = type;
 		
 		schema !fermerPublisher
 			post
-				?;
+				messages! = set of Message{},
+				etats! = map of (Message -> Etat){},
+				ids! = map of (Message -> string){},
+				type! = type;
 	end;
   
 class Subscriber ^=
@@ -99,9 +106,13 @@ class Subscriber ^=
 
 		schema !consommerMessage(m : Message)
 			pre
-				?
+				m in messages,
+				etats[m] = SUB@Etat
 			post
-				?;
+				messages! = messages,
+				etats! = (etats -- set of (Message){m}) ++ (map of (Message -> Etat) {m -> CONSOMME@Etat}),
+				ids! = ids,
+				type! = type;
 		
 		schema !subMessages(ms : set of Message, idss : map of (Message -> string))
 			pre
@@ -179,9 +190,9 @@ class Broker ^=
 		    // sub ~in subscribers,
 			#(those s::subscribers :- s.type = sub.type) < NB_S
 			post
-			subscribers! =subscribers.append(sub),//; with ou add append copié de l exemple de la bibliotheque  ?
+			subscribers! =subscribers.append(sub),//; with ou add append copiÃ© de l exemple de la bibliotheque  ?
 			messages! = messages,
-			etats! = etats,// à verifié cette ligne 
+			etats! = etats,// Ã  verifiÃ© cette ligne 
 			publishers! = publishers,
 			delaiDeRetention! = delaiDeRetention,
 			maintenant! = maintenant,
