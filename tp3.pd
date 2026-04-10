@@ -58,8 +58,7 @@ class Publisher ^=
 				m in messages,
 				etats[m] = CREE@Etat
 			post
-				//TODO: Call effacer message pour ne plus avoir l'erreur
-				etats! = etats.append(pair of (Message, Etat) {m, PUBLIE@Etat});
+				etats! = (etats -- set of (Message) {m}).append(pair of (Message, Etat) {m, PUBLIE@Etat});
 		
 		schema !effacerMessage(m : Message)
 			pre
@@ -129,10 +128,14 @@ class Subscriber ^=
 		
 		schema !effacerMessages(ms : set of Message)
 			pre
-				?
+				ms <<= messages,
+				forall m :: ms :- etats[m] = CONSOMME@Etat
 			post
-				?;
-		
+				messages! = messages -- ms,
+				ids! = ids -- ms,
+				etats! = etats -- ms,
+				type! = type;
+
 		schema !fermerSubscriber
 			post
 				messages! = set of Message{},
@@ -197,9 +200,9 @@ class Broker ^=
 		    // sub ~in subscribers,
 			#(those s::subscribers :- s.type = sub.type) < NB_S
 			post
-			subscribers! =subscribers.append(sub),//; with ou add append copié de l exemple de la bibliotheque  ?
+			subscribers! =subscribers.append(sub),//; with ou add append copi� de l exemple de la bibliotheque  ?
 			messages! = messages,
-			etats! = etats,// à verifié cette ligne 
+			etats! = etats,// � verifi� cette ligne 
 			publishers! = publishers,
 			delaiDeRetention! = delaiDeRetention,
 			maintenant! = maintenant,
@@ -216,10 +219,10 @@ class Broker ^=
 				m in etats.dom,
 				etats[m] = PUBLIE@Etat,
 				exists s::subscribers :- ((exists p::messages :- p.y = m & s.type = p.x) & (s.aConsommeMessage(m))),
-				// Méthode #1 avec 2 forall
+				// M�thode #1 avec 2 forall
 				//forall i::messages.dom :- messages[i].y = m 
 				//	==> (forall j::messages.dom :- i ~= j & messages[i].x = messages[j].x & etats[messages[j].y] = PUBLIE@Etat ==> i < j),
-				// Méthode #2 avec 1 forall et un exist -- plus propre a mon avis 
+				// M�thode #2 avec 1 forall et un exist -- plus propre a mon avis 
 				forall i::messages.dom :- messages[i].y ~= m & (exists p::messages :- p.y = m & p.x = messages[i].x) & etats[messages[i].y] = PUBLIE@Etat 
 					==> (exists t::messages.dom :- messages[i].y = m & t<i)
 			post
