@@ -213,9 +213,23 @@ class Broker ^=
 
 		schema !envoyerMessage(m : Message)
 			pre
-				?
+				m in etats.dom,
+				etats[m] = PUBLIE@Etat,
+				exists s::subscribers :- ((exists p::messages :- p.y = m & s.type = p.x) & (s.aConsommeMessage(m))),
+				// Méthode #1 avec 2 forall
+				//forall i::messages.dom :- messages[i].y = m 
+				//	==> (forall j::messages.dom :- i ~= j & messages[i].x = messages[j].x & etats[messages[j].y] = PUBLIE@Etat ==> i < j),
+				// Méthode #2 avec 1 forall et un exist -- plus propre a mon avis 
+				forall i::messages.dom :- messages[i].y ~= m & (exists p::messages :- p.y = m & p.x = messages[i].x) & etats[messages[i].y] = PUBLIE@Etat 
+					==> (exists t::messages.dom :- messages[i].y = m & t<i)
 			post
-				?;
+				messages! = messages,
+				etats! = (etats -- set of (Message){m}) ++ (map of (Message -> Etat) {m -> SUB@Etat}),
+				publishers! = publishers,
+				subscribers! = subscribers,
+				delaiDeRetention! = delaiDeRetention,
+				maintenant! = maintenant,
+				tempsArrives! = tempsArrives;
 
 		schema !supprimerMessagesTempsExpire
 			post
