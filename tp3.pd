@@ -210,9 +210,18 @@ class Broker ^=
 		
 		schema !recevoirMessage(m : Message, t : Type)
 			pre
-				?
+				~(exists p::publishers :- ((exists ms::messages :- ms.y = m & p.type = ms.x) & (p.aPublieMessage(m)))),
+				~(exists ms::messages :- ms.x = t & ms.y = m),
+				~(etats[m] = PUBLIE@Etat),
+				#messages < N
 			post
-				?;
+				messages! = messages.append(pair of (Type, Message) {t, m}),
+				etats! = etats.append(pair of (Message, Etat) {m, PUBLIE@Etat}),
+				tempsArrives! = tempsArrives.append(pair of (Message, nat) {m, maintenant}),
+				publishers! = publishers,
+				subscribers! = subscribers,
+				delaiDeRetention! = delaiDeRetention,
+				maintenant! = maintenant;
 
 		schema !envoyerMessage(m : Message)
 			pre
