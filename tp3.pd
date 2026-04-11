@@ -246,5 +246,12 @@ class Broker ^=
 
 		schema !supprimerMessagesTempsExpire
 			post
-		       ?;
+		       //Nouveau code
+                tempsArrives! = tempsArrives -- (those m :: tempsArrives.dom :- maintenant >= tempsArrives[m] + delaiDeRetention),
+				etats! = etats -- (those m :: tempsArrives.dom :- maintenant >= tempsArrives[m] + delaiDeRetention),
+				messages! = (for those p :: messages :- maintenant < tempsArrives[p.y] + delaiDeRetention yield p),
+				publishers! = publishers,
+				subscribers! = subscribers,
+				delaiDeRetention! = delaiDeRetention,
+				maintenant! = maintenant;
 end;
