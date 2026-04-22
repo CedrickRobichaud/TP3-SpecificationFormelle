@@ -1,3 +1,9 @@
+// Nom des membres de l'equipe
+// 1. Mélanie Claveau
+// 2. Sihame Ait Salem
+// 3. Thomas Lachance
+// 4. Cédrick Robichaud
+
 const N : nat ^= 2;
 const NB_P : nat ^= 3;
 const NB_S : nat ^= 4;
@@ -115,15 +121,14 @@ class Subscriber ^=
 		
 		schema !subMessages(ms : set of Message, idss : map of (Message -> string))
 			pre
-        (ms ** messages).empty,
-		idss.dom = ms,
-        forall m::(ms) :- ~(idss[m] in ids.ran),
-        idss.dom = ms,
-        forall m1,m2::(ms) :- idss[m1] = idss[m2] ==> m1 = m2
+				(ms ** messages).empty,
+				forall m::(ms) :- ~(idss[m] in ids.ran),
+				idss.dom = ms,
+				forall m1,m2::(ms) :- idss[m1] = idss[m2] ==> m1 = m2
 			post
-        messages! = messages ++ ms,
-		etats! =etats ++ map of (Message -> Etat){for m :: ms yield pair of (Message, Etat){m, SUB@Etat}},
-        ids! = ids ++ idss;
+				messages! = messages ++ ms,
+				etats! =etats ++ map of (Message -> Etat){for m :: ms yield pair of (Message, Etat){m, SUB@Etat}},
+				ids! = ids ++ idss;
 				
 		
 		schema !effacerMessages(ms : set of Message)
@@ -196,17 +201,16 @@ class Broker ^=
 		
 		schema !ajouterSubscriber(sub : Subscriber)
 			pre
-			~(sub in subscribers),
-		    // sub ~in subscribers,
-			#(those s::subscribers :- s.type = sub.type) < NB_S
+				~(sub in subscribers),
+				#(those s::subscribers :- s.type = sub.type) < NB_S
 			post
-			subscribers! =subscribers.append(sub),//; with ou add append copi� de l exemple de la bibliotheque  ?
-			messages! = messages,
-			etats! = etats,// � verifi� cette ligne 
-			publishers! = publishers,
-			delaiDeRetention! = delaiDeRetention,
-			maintenant! = maintenant,
-			tempsArrives! = tempsArrives;
+				subscribers! = subscribers.append(sub),
+				messages! = messages,
+				etats! = etats,
+				publishers! = publishers,
+				delaiDeRetention! = delaiDeRetention,
+				maintenant! = maintenant,
+				tempsArrives! = tempsArrives;
 		
 		schema !recevoirMessage(m : Message, t : Type)
 			pre
@@ -229,10 +233,6 @@ class Broker ^=
 				m in etats.dom,
 				etats[m] = PUBLIE@Etat,
 				exists s::subscribers :- ((exists p::messages :- p.y = m & s.type = p.x) & (s.aConsommeMessage(m))),
-				// M�thode #1 avec 2 forall
-				//forall i::messages.dom :- messages[i].y = m 
-				//	==> (forall j::messages.dom :- i ~= j & messages[i].x = messages[j].x & etats[messages[j].y] = PUBLIE@Etat ==> i < j),
-				// M�thode #2 avec 1 forall et un exist -- plus propre a mon avis 
 				forall i::messages.dom :- messages[i].y ~= m & (exists p::messages :- p.y = m & p.x = messages[i].x) & etats[messages[i].y] = PUBLIE@Etat 
 					==> (exists t::messages.dom :- messages[i].y = m & t<i)
 			post
@@ -246,7 +246,6 @@ class Broker ^=
 
 		schema !supprimerMessagesTempsExpire
 			post
-		       //Nouveau code
                 tempsArrives! = tempsArrives -- (those m :: tempsArrives.dom :- maintenant >= tempsArrives[m] + delaiDeRetention),
 				etats! = etats -- (those m :: tempsArrives.dom :- maintenant >= tempsArrives[m] + delaiDeRetention),
 				messages! = (for those p :: messages :- maintenant < tempsArrives[p.y] + delaiDeRetention yield p),
