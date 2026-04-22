@@ -122,8 +122,8 @@ class Subscriber ^=
 		schema !subMessages(ms : set of Message, idss : map of (Message -> string))
 			pre
 				(ms ** messages).empty,
-				forall m::(ms) :- ~(idss[m] in ids.ran),
 				idss.dom = ms,
+				forall m::(ms) :- ~(idss[m] in ids.ran),
 				forall m1,m2::(ms) :- idss[m1] = idss[m2] ==> m1 = m2
 			post
 				messages! = messages ++ ms,
